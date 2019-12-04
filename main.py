@@ -3,21 +3,22 @@ from random import randint
  
 #heuristic 2
 
-def nim(totalPebbles, maxTake, player0):
+def nim(totalPebbles, maxTake, pathOptions):
     pullPattern = ""
-    player0Choice = []
+    iterations = 0
     i = 0
+    choiceNdx = 0
     while i < totalPebbles:
-        num0 = player0(maxTake)
-        player0Choice.append(num0)
+        iterations += 1
+        num0 = pathOptions[choiceNdx]
         pullPattern += ('0'*num0)
         i += num0
         if i >= totalPebbles:
-            return 0, pullPattern, player0Choice
+            return 0, pullPattern
         num1 = player1()
         pullPattern += ('1'*num1)
         i += num1
-    return 1, pullPattern, player0Choice
+    return 1, pullPattern, iterations
     
 
 def playerRandom(maxTake):
@@ -29,6 +30,15 @@ def trainedPlayer():
 
 def player1():
     return 4
+
+def baseline():
+    counter = 0
+    num = randint(0, maxTake)
+    player0.append(num)
+    counter += num
+    num1 = randint(0, maxTake)
+    player1.append(num1)
+    counter += num1 
 
 def geneticAlg(winHistory, counter):
     combos = len(winHistory)//2
@@ -57,13 +67,13 @@ def main():
     for i in range(0, generationSize):
         # Need to give nim a random array that guarantees all the pebbles get taken
         # An array with totalPebbles / 2 elements should guarantee this.
-        winner, pullPattern, player0Choice = nim(totalPebbles, maxTake)
+        baseline = [randint(1, maxTake) for x in range(totalPebbles//2)]
+        winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline)
         pullPattern = pullPattern[:totalPebbles]
         if winner == 0:
-            winHistory.append(player0Choice)
+            winHistory.append(baseline[0:iterations])
     print("Number baseline wins out of {0}: {1}".format(generationSize, len(winHistory)))
-    while len(winHistory) < 95:
+    while len(winHistory) < 65:
         pathOptions, counter = geneticAlg(winHistory, counter)
-
 
 main()
