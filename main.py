@@ -1,9 +1,7 @@
-from random import randint
-#heuristic 1
- 
-#heuristic 2
+from random import randint, sample
+from math import floor
 
-def nim(totalPebbles, maxTake, pathOptions):
+def nim(totalPebbles, maxTake, pathOptions, playerFunk):
     pullPattern = ""
     iterations = 0
     i = 0
@@ -16,8 +14,7 @@ def nim(totalPebbles, maxTake, pathOptions):
         i += num0
         if i >= totalPebbles:
             return 0, pullPattern, iterations
-        #num1 = player1()
-        num1 = playerRandom(maxTake)
+        num1 = playerFunk(maxTake)
         pullPattern += ('1'*num1)
         i += num1
     return 1, pullPattern, iterations
@@ -30,17 +27,8 @@ def playerRandom(maxTake):
 def trainedPlayer():
     pass
 
-def player1():
+def player4(maxTake):
     return 4
-
-def baseline():
-    counter = 0
-    num = randint(0, maxTake)
-    player0.append(num)
-    counter += num
-    num1 = randint(0, maxTake)
-    player1.append(num1)
-    counter += num1 
 
 def mutate(child, numOfMutations, maxTake):
     for mutations in range(0, numOfMutations):
@@ -48,22 +36,36 @@ def mutate(child, numOfMutations, maxTake):
         child[ndx] = randint(1, maxTake)
     return child
 
-def geneticAlg(winHistory, counter):
-    combos = len(winHistory)//2
-    pathOptions = []
+def geneticAlg(winHistory, loseHistory, numKids, counter):
     counter += 1
-    for i in range(0, combos):
-        child1 = winHistory[i]
-        i += 1
-        child2 = winHistory[i]
-        child1Beg = child1[:len(child1)//2]
-        child1End = child1[len(child1)//2:]
-        child2Beg = child2[:len(child2)//2]
-        child2End = child2[len(child2)//2:]
+
+    # Get sets of unique random indices from both winners and losers
+    # Winners are selected for reproduction
+    kidIndices = sample(range(len(loseHistory)), numKids)
+    # Losers are selected for... replacement
+    parentalUnitIndices = sample(range(len(winHistory)), numKids)
+    for i in range(0, numKids // 2):
+        # A very Betan reproduction. One individual may serve as both parents
+        ndx = parentalUnitIndices.pop()
+        parent1 = winHistory[ndx]
+        ndx = parentalUnitIndices.pop()
+        parent2 = winHistory[ndx]
+
+        # Reproduction
+        child1Beg = parent1[:len(parent1)//2]
+        child1End = parent1[len(parent1)//2:]
+        child2Beg = parent2[:len(parent2)//2]
+        child2End = parent2[len(parent2)//2:]
         newChild1 = child1Beg + child2End
         newChild2 = child2Beg + child1End
-        pathOptions.append(newChild1)
-        pathOptions.append(newChild2)
+        
+        # Replacement
+        ndx = kidIndices.pop()
+        loseHistory[ndx] = newChild1
+        ndx = kidIndices.pop()
+        loseHistory[ndx] = newChild2
+    # Combine the winners with the evolved population
+    pathOptions = winHistory + loseHistory
     return pathOptions, counter
 
 def geneticAlgWithSingleMutation(winHistory, counter, mutationRate, maxTake):
@@ -108,46 +110,67 @@ def geneticAlgWithMultipleMutations(winHistory, counter, mutationRate, mutationC
         pathOptions.append(newChild2)
     return pathOptions, counter
 
+def battle(pathOptions, totalPebbles, maxTake, playerFunk):
+    wins = 0
+    for i in range(0, len(pathOptions)):
+        winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], playerFunk)
+        pullPattern = pullPattern[:totalPebbles]
+        if winner == 0:
+            wins += 1
+    return wins
+
 def main():
     totalPebbles = 97
     maxTake = 4
     generationSize = 1000
+    reproductionRate = .2
     generations = 0
     winHistory = []
+    loseHistory = []
     for i in range(0, generationSize):
         # Need to give nim a random array that guarantees all the pebbles get taken
         # An array with totalPebbles / 2 elements should guarantee this.
         baseline = [randint(1, maxTake) for x in range(totalPebbles//2)]
-        winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline)
+        winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, player4)
         pullPattern = pullPattern[:totalPebbles]
         if winner == 0:
-            print('Winning baseline: {0}'.format(baseline[0:iterations]))
+            #print('Winning baseline: {0}'.format(baseline[0:iterations]))
             winHistory.append(baseline[0:iterations])
         else:
-            print('Losing baseline: {0}'.format(baseline[0:iterations]))
+            #print('Losing baseline: {0}'.format(baseline[0:iterations]))
+            loseHistory.append(baseline[0:iterations])
     print("Number baseline wins out of {0}: {1}".format(generationSize, len(winHistory)))
     winPercent = len(winHistory) / generationSize
     # Until our family gets strong enough...
-    while winPercent < .75:
+    while winPercent < .95:
         # Feed the winning paths back into evolution
+        # Calculate the number of replacements to generate
+        numKids = min([len(winHistory), floor(len(loseHistory)*reproductionRate)])
+        numKids = (numKids // 2) * 2
         # With no mutations
-        # pathOptions, generations = geneticAlg(winHistory, generations)
+        pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations)
         # With a chance at a single mutation per combination
-        pathOptions, generations = geneticAlgWithSingleMutation(winHistory, generations, 100, maxTake)
+        #pathOptions, generations = geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, generations, 100, maxTake)
         #print('pathOptions: {0}'.format(pathOptions))
-        # Clear the history
+        # Clear the histories
         winHistory = []
+        loseHistory = []
         # For each of the products of this round of evolution...
         for i in range(0, len(pathOptions)):
             # Have them play again
-            winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i])
+            winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], player4)
             pullPattern = pullPattern[:totalPebbles]
             # If player 0 wins, add them to the new win history list
             if winner == 0:
-                print('A winning strategy: {0}'.format(pathOptions[i]))
+                #print('A winning strategy: {0}'.format(pathOptions[i]))
                 winHistory.append(pathOptions[i][0:iterations])
+            else: 
+                loseHistory.append(pathOptions[i][0:iterations])
         print("Number of generated wins out of {0}: {1}".format(len(pathOptions), len(winHistory)))
         # recalculate the winning percentage
         winPercent = len(winHistory) / len(pathOptions)
+
+    wins = battle(pathOptions, totalPebbles, maxTake, playerRandom)
+    print("Number of battle wins out of {0}: {1}".format(generationSize, wins))
 
 main()
