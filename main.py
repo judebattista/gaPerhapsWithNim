@@ -14,21 +14,40 @@ def nim(totalPebbles, maxTake, pathOptions, playerFunk):
         i += num0
         if i >= totalPebbles:
             return 0, pullPattern, iterations
-        num1 = playerFunk(maxTake)
+        num1 = playerFunk(maxTake, i)
         pullPattern += ('1'*num1)
         i += num1
     return 1, pullPattern, iterations
     
+############################
+# Players to train against
+############################
 
-def playerRandom(maxTake):
+# Random selection, primarily for testing trained populations
+# Not a useful training tool
+def playerRandom(maxTake, i):
     num0 = randint(1, maxTake)
     return num0
 
-def trainedPlayer():
-    pass
+# This player always chooses the maximum 
 
-def player4(maxTake):
-    return 4
+def playerMax(maxTake, i):
+    return maxTake
+
+def player3(maxTake, i):
+    return 3
+
+def player2(maxTake, i):
+    return 2
+
+def player1(maxTake, i):
+    return 1
+
+def playerBest(maxTake, i):
+    choice = i % (maxTake+1)
+    if choice == 0:
+        return maxTake
+    return choice
 
 def mutate(child, numOfMutations, maxTake):
     for mutations in range(0, numOfMutations):
@@ -127,11 +146,15 @@ def main():
     generations = 0
     winHistory = []
     loseHistory = []
+    trainingPlayer = playerRandom
+    battlePlayer = playerBest
+    desiredWinRate = .65
     for i in range(0, generationSize):
         # Need to give nim a random array that guarantees all the pebbles get taken
         # An array with totalPebbles / 2 elements should guarantee this.
         baseline = [randint(1, maxTake) for x in range(totalPebbles//2)]
-        winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, player4)
+        #winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, trainingPlayer)
+        winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, trainingPlayer)
         pullPattern = pullPattern[:totalPebbles]
         if winner == 0:
             #print('Winning baseline: {0}'.format(baseline[0:iterations]))
@@ -142,7 +165,7 @@ def main():
     print("Number baseline wins out of {0}: {1}".format(generationSize, len(winHistory)))
     winPercent = len(winHistory) / generationSize
     # Until our family gets strong enough...
-    while winPercent < .95:
+    while winPercent < desiredWinRate:
         # Feed the winning paths back into evolution
         # Calculate the number of replacements to generate
         numKids = min([len(winHistory), floor(len(loseHistory)*reproductionRate)])
@@ -158,7 +181,8 @@ def main():
         # For each of the products of this round of evolution...
         for i in range(0, len(pathOptions)):
             # Have them play again
-            winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], player4)
+            #winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], trainingPlayer)
+            winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], trainingPlayer)
             pullPattern = pullPattern[:totalPebbles]
             # If player 0 wins, add them to the new win history list
             if winner == 0:
@@ -170,7 +194,17 @@ def main():
         # recalculate the winning percentage
         winPercent = len(winHistory) / len(pathOptions)
 
+    wins = battle(pathOptions, totalPebbles, maxTake, battlePlayer)
+    print("Number of battle wins out of {0} against playerBest: {1}".format(generationSize, wins))
+    wins = battle(pathOptions, totalPebbles, maxTake, playerMax)
+    print("Number of battle wins out of {0} against playerMax: {1}".format(generationSize, wins))
+    wins = battle(pathOptions, totalPebbles, maxTake, player3)
+    print("Number of battle wins out of {0} against player3: {1}".format(generationSize, wins))
+    wins = battle(pathOptions, totalPebbles, maxTake, player2)
+    print("Number of battle wins out of {0} against player2: {1}".format(generationSize, wins))
+    wins = battle(pathOptions, totalPebbles, maxTake, player1)
+    print("Number of battle wins out of {0} against player1: {1}".format(generationSize, wins))
     wins = battle(pathOptions, totalPebbles, maxTake, playerRandom)
-    print("Number of battle wins out of {0}: {1}".format(generationSize, wins))
+    print("Number of battle wins out of {0} against playerRandom: {1}".format(generationSize, wins))
 
 main()
