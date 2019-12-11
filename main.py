@@ -10,12 +10,12 @@ def nim(totalPebbles, maxTake, pathOptions, playerFunk):
         iterations += 1
         num0 = pathOptions[choiceNdx]
         #print('num0 = {0}'.format(num0))
-        pullPattern += ('0'*num0)
+        #pullPattern += ('0'*num0)
         i += num0
         if i >= totalPebbles:
             return 0, pullPattern, iterations
         num1 = playerFunk(maxTake, i)
-        pullPattern += ('1'*num1)
+        #pullPattern += ('1'*num1)
         i += num1
     return 1, pullPattern, iterations
     
@@ -49,13 +49,19 @@ def playerBest(maxTake, i):
         return maxTake
     return choice
 
+def playerGenerous(maxTake, i):
+    choice = (i % maxTake) - 1
+    if choice <= 0:
+        return maxTake + choice
+    return choice
+
 def mutate(child, numOfMutations, maxTake):
     for mutations in range(0, numOfMutations):
         ndx = randint(0, len(child)-1)
         child[ndx] = randint(1, maxTake)
     return child
 
-def geneticAlg(winHistory, loseHistory, numKids, counter):
+def geneticAlg(winHistory, loseHistory, numKids, counter, maxTake):
     counter += 1
 
     # Get sets of unique random indices from both winners and losers
@@ -87,47 +93,138 @@ def geneticAlg(winHistory, loseHistory, numKids, counter):
     pathOptions = winHistory + loseHistory
     return pathOptions, counter
 
-def geneticAlgWithSingleMutation(winHistory, counter, mutationRate, maxTake):
-    combos = len(winHistory)//2
-    pathOptions = []
+def geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, counter, maxTake):
     counter += 1
-    for i in range(0, combos):
-        child1 = winHistory[i]
-        i += 1
-        child2 = winHistory[i]
-        child1Beg = child1[:len(child1)//2]
-        child1End = child1[len(child1)//2:]
-        child2Beg = child2[:len(child2)//2]
-        child2End = child2[len(child2)//2:]
+    mutationRate = 5
+    # Get sets of unique random indices from both winners and losers
+    # Winners are selected for reproduction
+    kidIndices = sample(range(len(loseHistory)), numKids)
+    # Losers are selected for... replacement
+    parentalUnitIndices = sample(range(len(winHistory)), numKids)
+    for i in range(0, numKids // 2):
+        # A very Betan reproduction. One individual may serve as both parents
+        ndx = parentalUnitIndices.pop()
+        parent1 = winHistory[ndx]
+        ndx = parentalUnitIndices.pop()
+        parent2 = winHistory[ndx]
+
+        # Reproduction
+        child1Beg = parent1[:len(parent1)//2]
+        child1End = parent1[len(parent1)//2:]
+        child2Beg = parent2[:len(parent2)//2]
+        child2End = parent2[len(parent2)//2:]
         newChild1 = child1Beg + child2End
         newChild2 = child2Beg + child1End
+        
         mutate1 = randint(0, 100)
         if mutate1 < mutationRate:
+            print("mutation child1 Single")
             newChild1 = mutate(newChild1, 1, maxTake)
         mutate2 = randint(0, 100)
         if mutate2 < mutationRate:
+            print("mutation child2 Single")
             newChild2 = mutate(newChild2, 1, maxTake)
-        pathOptions.append(newChild1)
-        pathOptions.append(newChild2)
+        #pathOptions.append(newChild1)
+        #pathOptions.append(newChild2)
+
+        # Replacement
+        ndx = kidIndices.pop()
+        loseHistory[ndx] = newChild1
+        ndx = kidIndices.pop()
+        loseHistory[ndx] = newChild2
+    # Combine the winners with the evolved population
+    pathOptions = winHistory + loseHistory
     return pathOptions, counter
 
-def geneticAlgWithMultipleMutations(winHistory, counter, mutationRate, mutationCount, maxTake):
-    combos = len(winHistory)//2
-    pathOptions = []
+    #combos = len(winHistory)//2
+    #pathOptions = []
+    #counter += 1
+    #for i in range(0, combos):
+    #    child1 = winHistory[i]
+    #    i += 1
+    #    child2 = winHistory[i]
+    #    child1Beg = child1[:len(child1)//2]
+    #    child1End = child1[len(child1)//2:]
+    #    child2Beg = child2[:len(child2)//2]
+    #    child2End = child2[len(child2)//2:]
+    #    newChild1 = child1Beg + child2End
+    #    newChild2 = child2Beg + child1End
+    #    mutate1 = randint(0, 100)
+    #    if mutate1 < mutationRate:
+    #        newChild1 = mutate(newChild1, 1, maxTake)
+    #    mutate2 = randint(0, 100)
+    #    if mutate2 < mutationRate:
+    #        newChild2 = mutate(newChild2, 1, maxTake)
+    #    pathOptions.append(newChild1)
+    #    pathOptions.append(newChild2)
+    #return pathOptions, counter
+
+def geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, counter, maxTake):
     counter += 1
-    for i in range(0, combos):
-        child1 = winHistory[i]
-        i += 1
-        child2 = winHistory[i]
-        child1Beg = child1[:len(child1)//2]
-        child1End = child1[len(child1)//2:]
-        child2Beg = child2[:len(child2)//2]
-        child2End = child2[len(child2)//2:]
+    mutationRate = 1
+    # Get sets of unique random indices from both winners and losers
+    # Winners are selected for reproduction
+    kidIndices = sample(range(len(loseHistory)), numKids)
+    # Losers are selected for... replacement
+    parentalUnitIndices = sample(range(len(winHistory)), numKids)
+    for i in range(0, numKids // 2):
+        # A very Betan reproduction. One individual may serve as both parents
+        ndx = parentalUnitIndices.pop()
+        parent1 = winHistory[ndx]
+        ndx = parentalUnitIndices.pop()
+        parent2 = winHistory[ndx]
+
+        # Reproduction
+        child1Beg = parent1[:len(parent1)//2]
+        child1End = parent1[len(parent1)//2:]
+        child2Beg = parent2[:len(parent2)//2]
+        child2End = parent2[len(parent2)//2:]
         newChild1 = child1Beg + child2End
         newChild2 = child2Beg + child1End
-        pathOptions.append(newChild1)
-        pathOptions.append(newChild2)
+        
+        mutate1 = randint(0, 100)
+        if mutate1 < mutationRate:
+            #print("mutation child1 Multiple")
+            numOfMutations = randint(0, 10)
+            for j in range(0, numOfMutations):
+                print("mutation child1 Multiple")
+                newChild1 = mutate(newChild1, 1, maxTake)
+                newChild1 = mutate(newChild1, 1, maxTake)
+        mutate2 = randint(0, 100)
+        if mutate2 < mutationRate:
+            #print("mutation child2 Multiple")
+            numOfMutations = randint(0, 10)
+            for j in range(0, numOfMutations):
+                print("mutation child2 Multiple")
+                newChild2 = mutate(newChild2, 1, maxTake)
+                newChild1 = mutate(newChild1, 1, maxTake)
+        #pathOptions.append(newChild1)
+        #pathOptions.append(newChild2)
+
+        # Replacement
+        ndx = kidIndices.pop()
+        loseHistory[ndx] = newChild1
+        ndx = kidIndices.pop()
+        loseHistory[ndx] = newChild2
+    # Combine the winners with the evolved population
+    pathOptions = winHistory + loseHistory
     return pathOptions, counter
+    #combos = len(winHistory)//2
+    #pathOptions = []
+    #counter += 1
+    #for i in range(0, combos):
+    #    child1 = winHistory[i]
+    #    i += 1
+    #    child2 = winHistory[i]
+    #    child1Beg = child1[:len(child1)//2]
+    #    child1End = child1[len(child1)//2:]
+    #    child2Beg = child2[:len(child2)//2]
+    #    child2End = child2[len(child2)//2:]
+    #   newChild1 = child1Beg + child2End
+    #   newChild2 = child2Beg + child1End
+    #    pathOptions.append(newChild1)
+    #    pathOptions.append(newChild2)
+    #return pathOptions, counter
 
 def battle(pathOptions, totalPebbles, maxTake, playerFunk):
     wins = 0
@@ -139,7 +236,7 @@ def battle(pathOptions, totalPebbles, maxTake, playerFunk):
     return wins
 
 def main():
-    totalPebbles = 97
+    totalPebbles = 95
     maxTake = 4
     generationSize = 1000
     reproductionRate = .2
@@ -155,7 +252,7 @@ def main():
         baseline = [randint(1, maxTake) for x in range(totalPebbles//2)]
         #winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, trainingPlayer)
         winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, trainingPlayer)
-        pullPattern = pullPattern[:totalPebbles]
+        #pullPattern = pullPattern[:totalPebbles]
         if winner == 0:
             #print('Winning baseline: {0}'.format(baseline[0:iterations]))
             winHistory.append(baseline[0:iterations])
@@ -171,7 +268,21 @@ def main():
         numKids = min([len(winHistory), floor(len(loseHistory)*reproductionRate)])
         numKids = (numKids // 2) * 2
         # With no mutations
-        pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations)
+        #pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations, maxTake)
+
+
+        #Kristen's edits start
+        #determine amount of mutations/if any
+        if winPercent < (desiredWinRate/.6):
+            pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, generations, maxTake)
+        elif winPercent < (desiredWinRate/.9):
+            pathOptions, generations = geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, generations, maxTake)
+        else:
+            pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations, maxTake)
+        #end of Kristen's edits
+        #can't seem to get it to do any single mutations
+
+
         # With a chance at a single mutation per combination
         #pathOptions, generations = geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, generations, 100, maxTake)
         #print('pathOptions: {0}'.format(pathOptions))
@@ -183,7 +294,7 @@ def main():
             # Have them play again
             #winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], trainingPlayer)
             winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], trainingPlayer)
-            pullPattern = pullPattern[:totalPebbles]
+            #pullPattern = pullPattern[:totalPebbles]
             # If player 0 wins, add them to the new win history list
             if winner == 0:
                 #print('A winning strategy: {0}'.format(pathOptions[i]))
@@ -206,5 +317,7 @@ def main():
     print("Number of battle wins out of {0} against player1: {1}".format(generationSize, wins))
     wins = battle(pathOptions, totalPebbles, maxTake, playerRandom)
     print("Number of battle wins out of {0} against playerRandom: {1}".format(generationSize, wins))
+    wins = battle(pathOptions, totalPebbles, maxTake, playerGenerous)
+    print("Number of battle wins out of {0} against playerGenerous: {1}".format(generationSize, wins))
 
 main()
