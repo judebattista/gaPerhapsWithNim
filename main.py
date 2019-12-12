@@ -409,10 +409,13 @@ def main():
     loseHistory = []
     trainingPlayer = playerRandom
     battlePlayer = playerBest
-    desiredWinRate = .5
+    desiredWinRate = .67
     sep = '#'*100
-    for foo in range(0, 20):
+    for foo in range(20):
         generations = 0
+        winPercent = 0
+        winHistory = []
+        loseHistory = []
         for i in range(0, generationSize):
             # Need to give nim a random array that guarantees all the pebbles get taken
             # An array with totalPebbles / 2 elements should guarantee this.
@@ -474,7 +477,11 @@ def main():
             #print("Number of generated wins out of {0}: {1}".format(len(pathOptions), len(winHistory)))
             # recalculate the winning percentage
             winPercent = len(winHistory) / len(pathOptions)
-            print('It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
+            #print('AAA - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
+        print('BBB - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
+        with open('stats.txt', 'a+') as outfile:
+            outfile.write(str(generations) + '\n')
+    #print('CCC - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
     # wins = battle(pathOptions, totalPebbles, maxTake, battlePlayer)
     # print("Number of battle wins out of {0} against playerBest: {1}".format(generationSize, wins))
     # wins = battle(pathOptions, totalPebbles, maxTake, playerMax)
