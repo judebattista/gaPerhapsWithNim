@@ -409,89 +409,96 @@ def main():
     loseHistory = []
     trainingPlayer = playerRandom
     battlePlayer = playerBest
-    desiredWinRate = .65
+    desiredWinRate = .67
     sep = '#'*100
-    
-    for i in range(0, generationSize):
-        # Need to give nim a random array that guarantees all the pebbles get taken
-        # An array with totalPebbles / 2 elements should guarantee this.
-        baseline = [randint(1, maxTake) for x in range(totalPebbles//2)]
-        #winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, trainingPlayer)
-        winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, trainingPlayer)
-        #pullPattern = pullPattern[:totalPebbles]
-        if winner == 0:
-            #print('Winning baseline: {0}'.format(baseline[0:iterations]))
-            winHistory.append(baseline[0:iterations])
-        else:
-            #print('Losing baseline: {0}'.format(baseline[0:iterations]))
-            loseHistory.append(baseline[0:iterations])
-    #print("Number baseline wins out of {0}: {1}".format(generationSize, len(winHistory)))
-    winPercent = len(winHistory) / generationSize
-    # Until our family gets strong enough...
-    while winPercent < desiredWinRate:
-        # Feed the winning paths back into evolution
-        
-        # With no mutations
-        # Calculate the number of replacements to generate
-        #numKids = min([len(winHistory), floor(len(loseHistory)*reproductionRate)])
-        #numKids = (numKids // 2) * 2
-        #pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations, maxTake)
-
-        # With multiple mutations - breakpoints
-        # #determine amount of mutations/if any
-        # if winPercent < (desiredWinRate*.6):
-        #     pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, mutationRate, generations, maxTake)
-        # elif winPercent < (desiredWinRate*.9):
-        #     pathOptions, generations = geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, mutationRate, generations, maxTake)
-        # else:
-        #     pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations, maxTake)
-
-        # With multiple mutations, continuous mutation scaling
-        scalingMutationRate = min([0, 1 - winPercent]) * mutationRate
-        #scalingReproductionRate = min([0, 1 - winPercent]) * reproductionRate
-        scalingReproductionRate = reproductionRate
-        numKids = min([len(winHistory), floor(len(loseHistory)*scalingReproductionRate)])
-        numKids = (numKids // 2) * 2
-        pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, scalingMutationRate, generations, maxTake)
-        # With a chance at a single mutation per combination
-        #pathOptions, generations = geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, generations, 100, maxTake)
-        #print('pathOptions: {0}'.format(pathOptions))
-        # Clear the histories
+    for foo in range(20):
+        generations = 0
+        winPercent = 0
         winHistory = []
         loseHistory = []
-        # For each of the products of this round of evolution...
-        for i in range(0, len(pathOptions)):
-            # Have them play again
-            winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], trainingPlayer)
+        for i in range(0, generationSize):
+            # Need to give nim a random array that guarantees all the pebbles get taken
+            # An array with totalPebbles / 2 elements should guarantee this.
+            baseline = [randint(1, maxTake) for x in range(totalPebbles//2)]
+            #winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, trainingPlayer)
+            winner, pullPattern, iterations = nim(totalPebbles, maxTake, baseline, trainingPlayer)
             #pullPattern = pullPattern[:totalPebbles]
-            # If player 0 wins, add them to the new win history list
             if winner == 0:
-                #print('A winning strategy: {0}'.format(pathOptions[i]))
-                winHistory.append(pathOptions[i][0:iterations])
-            else: 
-                loseHistory.append(pathOptions[i][0:iterations])
-        print("Number of generated wins out of {0}: {1}".format(len(pathOptions), len(winHistory)))
-        # recalculate the winning percentage
-        winPercent = len(winHistory) / len(pathOptions)
-    print('AAA - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
+                #print('Winning baseline: {0}'.format(baseline[0:iterations]))
+                winHistory.append(baseline[0:iterations])
+            else:
+                #print('Losing baseline: {0}'.format(baseline[0:iterations]))
+                loseHistory.append(baseline[0:iterations])
+        #print("Number baseline wins out of {0}: {1}".format(generationSize, len(winHistory)))
+        winPercent = len(winHistory) / generationSize
+        # Until our family gets strong enough...
+        while winPercent < desiredWinRate:
+            # Feed the winning paths back into evolution
+            
+            # With no mutations
+            # Calculate the number of replacements to generate
+            #numKids = min([len(winHistory), floor(len(loseHistory)*reproductionRate)])
+            #numKids = (numKids // 2) * 2
+            #pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations, maxTake)
 
-    wins = battle(pathOptions, totalPebbles, maxTake, battlePlayer)
-    print("Number of battle wins out of {0} against playerReduce: {1}".format(generationSize, wins))
-    wins = battle(pathOptions, totalPebbles, maxTake, playerMax)
-    print("Number of battle wins out of {0} against playerMax: {1}".format(generationSize, wins))
-    wins = battle(pathOptions, totalPebbles, maxTake, player3)
-    print("Number of battle wins out of {0} against player3: {1}".format(generationSize, wins))
-    wins = battle(pathOptions, totalPebbles, maxTake, player2)
-    print("Number of battle wins out of {0} against player2: {1}".format(generationSize, wins))
-    wins = battle(pathOptions, totalPebbles, maxTake, player1)
-    print("Number of battle wins out of {0} against player1: {1}".format(generationSize, wins))
-    wins = battle(pathOptions, totalPebbles, maxTake, playerRandom)
-    print("Number of battle wins out of {0} against playerRandom: {1}".format(generationSize, wins))
-    wins = battle(pathOptions, totalPebbles, maxTake, playerGenerous)
-    print("Number of battle wins out of {0} against playerGenerous: {1}".format(generationSize, wins))
-    menu()
-    strat = pathOptions[randint(0, len(pathOptions) - 1)]
-    winner = playHuman(totalPebbles, maxTake, strat)
+            # With multiple mutations - breakpoints
+            # #determine amount of mutations/if any
+            # if winPercent < (desiredWinRate*.6):
+            #     pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, mutationRate, generations, maxTake)
+            # elif winPercent < (desiredWinRate*.9):
+            #     pathOptions, generations = geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, mutationRate, generations, maxTake)
+            # else:
+            #     pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations, maxTake)
+
+            # With multiple mutations, continuous mutation scaling
+            scalingMutationRate = min([0, 1 - winPercent]) * mutationRate
+            #scalingReproductionRate = min([0, 1 - winPercent]) * reproductionRate
+            scalingReproductionRate = reproductionRate
+            numKids = min([len(winHistory), floor(len(loseHistory)*scalingReproductionRate)])
+            numKids = (numKids // 2) * 2
+            pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, scalingMutationRate, generations, maxTake)
+            # With a chance at a single mutation per combination
+            #pathOptions, generations = geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, generations, 100, maxTake)
+            #print('pathOptions: {0}'.format(pathOptions))
+            # Clear the histories
+            winHistory = []
+            loseHistory = []
+            # For each of the products of this round of evolution...
+            for i in range(0, len(pathOptions)):
+                # Have them play again
+                winner, pullPattern, iterations = nim(totalPebbles, maxTake, pathOptions[i], trainingPlayer)
+                #pullPattern = pullPattern[:totalPebbles]
+                # If player 0 wins, add them to the new win history list
+                if winner == 0:
+                    #print('A winning strategy: {0}'.format(pathOptions[i]))
+                    winHistory.append(pathOptions[i][0:iterations])
+                else: 
+                    loseHistory.append(pathOptions[i][0:iterations])
+            #print("Number of generated wins out of {0}: {1}".format(len(pathOptions), len(winHistory)))
+            # recalculate the winning percentage
+            winPercent = len(winHistory) / len(pathOptions)
+            #print('AAA - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
+        print('BBB - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
+        with open('stats.txt', 'a+') as outfile:
+            outfile.write(str(generations) + '\n')
+    #print('CCC - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
+    # wins = battle(pathOptions, totalPebbles, maxTake, battlePlayer)
+    # print("Number of battle wins out of {0} against playerBest: {1}".format(generationSize, wins))
+    # wins = battle(pathOptions, totalPebbles, maxTake, playerMax)
+    # print("Number of battle wins out of {0} against playerMax: {1}".format(generationSize, wins))
+    # wins = battle(pathOptions, totalPebbles, maxTake, player3)
+    # print("Number of battle wins out of {0} against player3: {1}".format(generationSize, wins))
+    # wins = battle(pathOptions, totalPebbles, maxTake, player2)
+    # print("Number of battle wins out of {0} against player2: {1}".format(generationSize, wins))
+    # wins = battle(pathOptions, totalPebbles, maxTake, player1)
+    # print("Number of battle wins out of {0} against player1: {1}".format(generationSize, wins))
+    # wins = battle(pathOptions, totalPebbles, maxTake, playerRandom)
+    # print("Number of battle wins out of {0} against playerRandom: {1}".format(generationSize, wins))
+    # wins = battle(pathOptions, totalPebbles, maxTake, playerGenerous)
+    # print("Number of battle wins out of {0} against playerGenerous: {1}".format(generationSize, wins))
+    #menu()
+    #strat = pathOptions[randint(0, len(pathOptions) - 1)]
+    #winner = playHuman(totalPebbles, maxTake, strat)
     print()
     print()
     print()
