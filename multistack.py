@@ -187,6 +187,7 @@ def geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, mutationRate,
     return pathOptions, counter
 
 def geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, mutationRate, counter, pebbles):
+    print('GA START winHistory[0]: {0}, loseHistory: {1}'.format(winHistory[0], loseHistory[0]))
     counter += 1
     # Get sets of unique random indices from both winners and losers
     # Winners are selected for reproduction
@@ -218,9 +219,10 @@ def geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, mutationRa
         ndx = kidIndices.pop()
         loseHistory[ndx] = newChild2
     # Combine the winners with the evolved population
-    pathOptions = winHistory + loseHistory
-    #return pathOptions, counter
-    return counter
+    print('GA END winHistory[0]: {0}, loseHistory: {1}'.format(winHistory[0], loseHistory[0]))
+    result = winHistory + loseHistory
+    return result, counter
+    #return counter
 
 
 def battle(pathOptions, pebbles, playerFunk):
@@ -278,7 +280,9 @@ def main():
     print("Number baseline wins out of {0}: {1}".format(generationSize, len(winHistory)))
     winPercent = len(winHistory) / generationSize
     # Until our family gets strong enough...
+    pathOptions = winHistory + loseHistory
     while winPercent < desiredWinRate:
+        print('Path options at beginning of while: {0}'.format(pathOptions[0]))
         # Feed the winning paths back into evolution
 
         # With multiple mutations, continuous mutation scaling
@@ -289,13 +293,18 @@ def main():
         numKids = (numKids // 2) * 2
         #print('Win history: {0}, lose history:'.format(winHistory[0]))
         #pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, scalingMutationRate, generations, pebbles)
-        generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, scalingMutationRate, generations, pebbles)
-        print('pathOptions == baseline ? {0}'.format(pathOptions == baseline))
-        #print('Path options after ga: {0}'.format(pathOptions[0]))
+        print('Path options prior to ga: {0}'.format(pathOptions[0]))
+        result, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, scalingMutationRate, generations, pebbles)
+        print('RESULT after ga: {0}'.format(result[0]))
+        print('Path options after ga: {0}'.format(pathOptions[0]))
+        pathOptions = winHistory + loseHistory
+        print('Path options after combination: {0}'.format(pathOptions[0]))
+        print('Win history[0] prior to clear: {0}'.format(winHistory[0]))
         # Clear the histories
         winHistory = []
         loseHistory = []
         # For each of the products of this round of evolution...
+        print('Path options after clearing history: {0}'.format(pathOptions[0]))
         for i in range(0, len(pathOptions)):
             # Have them play again
             #print('calling nim for TRAINING with pathOptions length: {0}'.format(len(pathOptions)))
@@ -307,7 +316,9 @@ def main():
                 winHistory.append(pathOptions[i][0:iterations])
             else: 
                 loseHistory.append(pathOptions[i][0:iterations])
-        print("Number of training wins out of {0}: {1}".format(len(pathOptions), len(winHistory)))
+        print('wins: {0}, losses: {1}'.format(len(winHistory), len(loseHistory)))
+        print('Path options after for loop: {0}'.format(pathOptions[0]))
+        #print("Number of training wins out of {0}: {1}".format(len(pathOptions), len(winHistory)))
         # recalculate the winning percentage
         winPercent = len(winHistory) / len(pathOptions)
     print('AAA - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
