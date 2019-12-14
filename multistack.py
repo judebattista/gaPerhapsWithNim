@@ -219,7 +219,8 @@ def geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, mutationRa
         loseHistory[ndx] = newChild2
     # Combine the winners with the evolved population
     pathOptions = winHistory + loseHistory
-    return pathOptions, counter
+    #return pathOptions, counter
+    return counter
 
 
 def battle(pathOptions, pebbles, playerFunk):
@@ -242,8 +243,8 @@ def main():
     pebbles = [31, 41, 59]
     pebbleValues = []
     generationSize = 1000
-    reproductionRate = .2
-    mutationRate = .1
+    reproductionRate = 0 #.2
+    mutationRate = 0 #.1
     generations = 0
     winHistory = []
     loseHistory = []
@@ -267,6 +268,7 @@ def main():
             baseline.append([randStack, randTake])
         # print('calling nim for BASELINE with path options {0}'.format(baseline))
         winner, iterations = nim(pebbles, baseline, trainingPlayer)
+        print('Baseline winner: {0}'.format(winner))
         if winner == 0:
             #print('Winning baseline: {0}'.format(baseline[0:iterations]))
             winHistory.append(baseline[0:iterations])
@@ -285,9 +287,11 @@ def main():
         scalingReproductionRate = reproductionRate
         numKids = min([len(winHistory), floor(len(loseHistory)*scalingReproductionRate)])
         numKids = (numKids // 2) * 2
-        print('Win history: {0}, lose history:'.format(winHistory[0]))
-        pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, scalingMutationRate, generations, pebbles)
-        print('Path options after ga: {0}'.format(pathOptions[0]))
+        #print('Win history: {0}, lose history:'.format(winHistory[0]))
+        #pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, scalingMutationRate, generations, pebbles)
+        generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, scalingMutationRate, generations, pebbles)
+        print('pathOptions == baseline ? {0}'.format(pathOptions == baseline))
+        #print('Path options after ga: {0}'.format(pathOptions[0]))
         # Clear the histories
         winHistory = []
         loseHistory = []
@@ -296,6 +300,7 @@ def main():
             # Have them play again
             #print('calling nim for TRAINING with pathOptions length: {0}'.format(len(pathOptions)))
             winner, iterations = nim(pebbles, pathOptions[i], trainingPlayer)
+            #print('Training winner: {0}'.format(winner))
             # If player 0 wins, add them to the new win history list
             if winner == 0:
                 #print('A winning strategy: {0}'.format(pathOptions[i]))
