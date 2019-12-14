@@ -23,26 +23,28 @@ def nim(totalPebbles, maxTake, pathOptions, playerFunk):
 # Players to train against
 ############################
 
-# Random selection, primarily for testing trained populations
-# Not a useful training tool
+# Random selection
 def playerRandom(maxTake, i):
     num0 = randint(1, maxTake)
     return num0
 
 # This player always chooses the maximum 
-
 def playerMax(maxTake, i):
     return maxTake
 
+# Always takes three. Only run if maxTake > 2
 def player3(maxTake, i):
     return 3
 
+# Always takes two. Only run if maxTake > 1
 def player2(maxTake, i):
     return 2
 
+# Always takes one.
 def player1(maxTake, i):
     return 1
 
+# In most cases Best and Generous are functionally equivalent
 def playerBest(maxTake, i):
     choice = i % (maxTake+1)
     if choice == 0:
@@ -55,12 +57,14 @@ def playerGenerous(maxTake, i):
         return maxTake + choice
     return choice
 
+# Randomly insert a set number of mutations into a list
 def mutateChild(child, numOfMutations, maxTake):
     for mutations in range(0, numOfMutations+1):
         ndx = randint(0, len(child)-1)
         child[ndx] = randint(1, maxTake)
     return child
 
+# Randomly roll for a mutation at each index in a list
 def mutateGene(child, mutationRate, maxTake):
     chancePerGene = mutationRate / len(child)
     for ndx, gene in enumerate(child):
@@ -68,6 +72,7 @@ def mutateGene(child, mutationRate, maxTake):
             child[ndx] = randint(1, maxTake)
     return child
 
+# Most basic genetic alg. No mutations
 def geneticAlg(winHistory, loseHistory, numKids, counter, maxTake):
     counter += 1
 
@@ -175,7 +180,7 @@ def geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, mutationRa
     pathOptions = winHistory + loseHistory
     return pathOptions, counter
 
-
+# Test a set of moves against a specific opponent
 def battle(pathOptions, totalPebbles, maxTake, playerFunk):
     wins = 0
     for i in range(0, len(pathOptions)):
@@ -185,6 +190,7 @@ def battle(pathOptions, totalPebbles, maxTake, playerFunk):
             wins += 1
     return wins
 
+# Let a human play against a selected set of choices
 def playHuman(totalPebbles, maxTake, choices):
     move = 0
     maxMoves = len(choices)
@@ -210,7 +216,7 @@ def playHuman(totalPebbles, maxTake, choices):
         else:
             print('You take {0}, leaving {1} remaining'.format(playerTake, remainingPebbles))
         
-
+# Display a menu
 def menu():
     sep = '#'*100
     operations = [
@@ -402,8 +408,8 @@ def main():
     totalPebbles = 97
     maxTake = 4
     generationSize = 1000
-    reproductionRate = .5
-    mutationRate = 1
+    reproductionRate = .2
+    mutationRate = .1
     generations = 0
     winHistory = []
     loseHistory = []
@@ -437,15 +443,6 @@ def main():
         #numKids = (numKids // 2) * 2
         #pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations, maxTake)
 
-        # With multiple mutations - breakpoints
-        # #determine amount of mutations/if any
-        # if winPercent < (desiredWinRate*.6):
-        #     pathOptions, generations = geneticAlgWithMultipleMutations(winHistory, loseHistory, numKids, mutationRate, generations, maxTake)
-        # elif winPercent < (desiredWinRate*.9):
-        #     pathOptions, generations = geneticAlgWithSingleMutation(winHistory, loseHistory, numKids, mutationRate, generations, maxTake)
-        # else:
-        #     pathOptions, generations = geneticAlg(winHistory, loseHistory, numKids, generations, maxTake)
-
         # With multiple mutations, continuous mutation scaling
         scalingMutationRate = min([0, 1 - winPercent]) * mutationRate
         #scalingReproductionRate = min([0, 1 - winPercent]) * reproductionRate
@@ -476,6 +473,7 @@ def main():
     print('AAA - It took {0} generations to achieve a win rate of at least {1}.'.format(generations, desiredWinRate))
 
     wins = battle(pathOptions, totalPebbles, maxTake, battlePlayer)
+    # Thunderdome
     print("Number of battle wins out of {0} against playerReduce: {1}".format(generationSize, wins))
     wins = battle(pathOptions, totalPebbles, maxTake, playerMax)
     print("Number of battle wins out of {0} against playerMax: {1}".format(generationSize, wins))
